@@ -15,6 +15,11 @@ vim.g.have_nerd_font = true
 -- Display breadcrumb
 vim.o.winbar = "%{%v:lua.require'nvim-navic'.get_location()%}"
 
+-- Enable line wrapping
+vim.o.wrap = true
+-- Wrap lines at convenient points (like spaces)
+vim.opt.linebreak = true   
+
 -- Make line numbers default
 vim.o.number = true
 -- You can also add relative line numbers, to help with jumping.
@@ -73,7 +78,7 @@ vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 vim.o.inccommand = 'split'
 
 -- Show which line your cursor is on
-vim.o.cursorline = true
+vim.o.cursorline = false
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.o.scrolloff = 10
@@ -93,6 +98,12 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 vim.keymap.set('n', '<leader>q', '<cmd>bdelete<cr>', { desc = 'Close buffer' })
 -- Save current file
 vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = 'Save file' })
+-- Half-page down and center cursor
+vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, silent = true })
+-- Half-page up and center cursor
+vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, silent = true })
+-- Close all buffers
+vim.keymap.set('n', '<leader>Q', ':bufdo bd<CR>', { noremap = true, silent = true })
 
 -- Diagnostic keymaps
 -- vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -230,11 +241,10 @@ require('lazy').setup({
         },
       }
 
-      -- Keymaps go here because bufferline is ready
       local function get_listed_buffers()
         local buffers = {}
         for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-          if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_get_option(buf, 'buflisted') then
+          if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].buflisted then
             table.insert(buffers, buf)
           end
         end
@@ -260,7 +270,7 @@ require('lazy').setup({
   {
     'SmiteshP/nvim-navic',
     config = function()
-      require('nvim-navic').setup()
+      require('nvim-navic').setup {}
     end,
   },
 
@@ -357,6 +367,7 @@ require('lazy').setup({
         end,
       },
       { 'nvim-telescope/telescope-ui-select.nvim' },
+      { 'nvim-telescope/telescope-live-grep-args.nvim' },
 
       -- Useful for getting pretty icons, but requires a Nerd Font.
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
@@ -395,7 +406,10 @@ require('lazy').setup({
         -- pickers = {}
         extensions = {
           ['ui-select'] = {
-            require('telescope.themes').get_dropdown(),
+            theme = require('telescope.themes').get_dropdown(),
+          },
+          live_grep_args = {
+            auto_quoting = true,
           },
         },
       }
@@ -403,6 +417,7 @@ require('lazy').setup({
       -- Enable Telescope extensions if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
+      pcall(require('telescope').load_extension, 'live_grep_args')
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
@@ -411,7 +426,12 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>p', builtin.find_files, { desc = '[S]earch Ex[P]lorer' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
-      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      -- TODO: project wide search
+      -- vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
+      vim.keymap.set('n', '<leader>sg', function()
+        require('telescope').extensions.live_grep_args.live_grep_args()
+      end, { desc = '[S]earch by [G]rep + Args' })
+
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
@@ -578,23 +598,23 @@ require('lazy').setup({
 
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
-          map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
+          map('<leader>r', vim.lsp.buf.rename, '[R]e[n]ame')
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
-          map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
+          map('<leader>fx', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
 
           -- Find references for the word under your cursor.
-          map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+          map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
           -- Jump to the implementation of the word under your cursor.
           --  Useful when your language has ways of declaring types without an actual implementation.
-          map('gri', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
+          map('gi', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
 
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
-          map('grd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
@@ -785,46 +805,46 @@ require('lazy').setup({
     end,
   },
 
-  { -- Autoformat
-    'stevearc/conform.nvim',
-    event = { 'BufWritePre' },
-    cmd = { 'ConformInfo' },
-    keys = {
-      {
-        '<leader>f',
-        function()
-          require('conform').format { async = true, lsp_format = 'fallback' }
-        end,
-        mode = '',
-        desc = '[F]ormat buffer',
-      },
-    },
-    opts = {
-      notify_on_error = false,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        if disable_filetypes[vim.bo[bufnr].filetype] then
-          return nil
-        else
-          return {
-            timeout_ms = 500,
-            lsp_format = 'fallback',
-          }
-        end
-      end,
-      formatters_by_ft = {
-        lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
-        --
-        -- You can use 'stop_after_first' to run the first available formatter from the list
-        -- javascript = { "prettierd", "prettier", stop_after_first = true },
-      },
-    },
-  },
+  -- { -- Autoformat
+  --   'stevearc/conform.nvim',
+  --   event = { 'BufWritePre' },
+  --   cmd = { 'ConformInfo' },
+  --   keys = {
+  --     {
+  --       '<leader>f',
+  --       function()
+  --         require('conform').format { async = true, lsp_format = 'fallback' }
+  --       end,
+  --       mode = '',
+  --       desc = '[F]ormat buffer',
+  --     },
+  --   },
+  --   opts = {
+  --     notify_on_error = false,
+  --     format_on_save = function(bufnr)
+  --       -- Disable "format_on_save lsp_fallback" for languages that don't
+  --       -- have a well standardized coding style. You can add additional
+  --       -- languages here or re-enable it for the disabled ones.
+  --       local disable_filetypes = { c = true, cpp = true }
+  --       if disable_filetypes[vim.bo[bufnr].filetype] then
+  --         return nil
+  --       else
+  --         return {
+  --           timeout_ms = 500,
+  --           lsp_format = 'fallback',
+  --         }
+  --       end
+  --     end,
+  --     formatters_by_ft = {
+  --       lua = { 'stylua' },
+  --       -- Conform can also run multiple formatters sequentially
+  --       -- python = { "isort", "black" },
+  --       --
+  --       -- You can use 'stop_after_first' to run the first available formatter from the list
+  --       -- javascript = { "prettierd", "prettier", stop_after_first = true },
+  --     },
+  --   },
+  -- },
 
   { -- Autocompletion
     'saghen/blink.cmp',
@@ -939,6 +959,28 @@ require('lazy').setup({
           width = 30,
           side = 'left',
         },
+        git = {
+          enable = true,
+          ignore = false
+        },
+        renderer = {
+          icons = {
+            show = {
+              git = true,
+            },
+            glyphs = {
+              git = {
+                unstaged  = "M",  -- Modified
+                staged    = "A",  -- Added
+                unmerged  = "U",  -- Unmerged
+                renamed   = "R",  -- Renamed
+                untracked = "?",  -- Untracked
+                deleted   = "D",  -- Deleted
+                ignored   = "I",  -- Ignored
+              },
+            },
+          },
+        },
       }
       vim.api.nvim_create_autocmd('VimEnter', {
         callback = function()
@@ -961,7 +1003,7 @@ require('lazy').setup({
       require('tokyonight').setup {
         transparent = true,
         styles = {
-          comments = { italic = false }, -- Disable italics in comments
+          comments = { italic = false, fg = '#c0caf5' }, -- Disable italics in comments
           floats = 'transparent',
           sidebars = 'transparent',
         },
@@ -970,7 +1012,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'tokyonight-storm'
 
       -- Set BufferLine highlight after theme loads
       vim.api.nvim_set_hl(0, 'BufferLineBufferSelected', {
@@ -1021,6 +1063,34 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
+
+  {
+    'HiPhish/rainbow-delimiters.nvim',
+    config = function()
+      local rainbow_delimiters = require('rainbow-delimiters')
+
+      vim.g.rainbow_delimiters = {
+        strategy = {
+          [''] = rainbow_delimiters.strategy['global'],
+          vim = rainbow_delimiters.strategy['local'],
+        },
+        query = {
+          [''] = 'rainbow-delimiters',
+          lua = 'rainbow-blocks',
+        },
+        highlight = {
+          'RainbowDelimiterRed',
+          'RainbowDelimiterYellow',
+          'RainbowDelimiterBlue',
+          'RainbowDelimiterOrange',
+          'RainbowDelimiterGreen',
+          'RainbowDelimiterViolet',
+          'RainbowDelimiterCyan',
+        },
+      }
+    end,
+  },
+
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
@@ -1061,6 +1131,30 @@ require('lazy').setup({
     --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+  },
+
+  {
+    'abecodes/tabout.nvim',
+    config = function()
+      require('tabout').setup {
+        tabkey = '<Tab>',
+        backwards_tabkey = '<S-Tab>',
+        act_as_tab = true,
+        enable_backwards = true,
+        tabouts = {
+          { open = "'", close = "'" },
+          { open = '"', close = '"' },
+          { open = '`', close = '`' },
+          { open = '(', close = ')' },
+          { open = '[', close = ']' },
+          { open = '{', close = '}' }
+        },
+        ignore_beginning = true,
+        exclude = {}
+      }
+    end,
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
+    event = 'InsertCharPre',
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
@@ -1110,6 +1204,17 @@ require('lazy').setup({
     },
   },
 })
+
+vim.cmd [[
+  highlight RainbowDelimiterRed    guifg=#E06C75
+  highlight RainbowDelimiterYellow guifg=#E5C07B
+  highlight RainbowDelimiterBlue   guifg=#61AFEF
+  highlight RainbowDelimiterOrange guifg=#D19A66
+  highlight RainbowDelimiterGreen  guifg=#98C379
+  highlight RainbowDelimiterViolet guifg=#C678DD
+  highlight RainbowDelimiterCyan   guifg=#56B6C2
+]]
+
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
