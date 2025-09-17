@@ -32,6 +32,11 @@ vim.o.mouse = 'a'
 -- Don't show the mode, since it's already in the status line
 vim.o.showmode = false
 
+vim.o.foldmethod = 'expr'
+vim.o.foldexpr = 'nvim_treesitter#foldexpr()'
+vim.o.foldenable = true
+vim.o.foldlevel = 99
+
 -- Sync clipboard between OS and Neovim.
 --  Schedule the setting after `UiEnter` because it can increase startup-time.
 --  Remove this option if you want your OS clipboard to remain independent.
@@ -105,6 +110,9 @@ vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, silent = true })
 -- Close all buffers
 vim.keymap.set('n', '<leader>Q', ':bufdo bd<CR>', { noremap = true, silent = true })
 
+-- Toggle betweem alternate files
+vim.keymap.set('n', '<leader><leader>', '<C-^>', { desc = 'Toggle to previous buffer' })
+
 -- Diagnostic keymaps
 -- vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
@@ -115,12 +123,6 @@ vim.keymap.set('n', '<leader>Q', ':bufdo bd<CR>', { noremap = true, silent = tru
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
 -- or just use <C-\><C-n> to exit terminal mode
 -- vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
-
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -179,7 +181,8 @@ rtp:prepend(lazypath)
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
-  'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
+  -- 'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
+  'tpope/vim-sleuth',-- Detect tabstop and shiftwidth automatically
 
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
@@ -404,6 +407,20 @@ require('lazy').setup({
         --   },
         -- },
         -- pickers = {}
+        defaults = {
+          file_ignore_patterns = {
+            "node_modules",
+            "%.git/",
+            "%.cache/",
+            "%.o",
+            "%.a",
+            "%.out",
+            "%.class",
+            "%.pdf",
+            "%.zip",
+            "%.log"
+          }
+        },
         extensions = {
           ['ui-select'] = {
             theme = require('telescope.themes').get_dropdown(),
@@ -424,6 +441,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       -- vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
       vim.keymap.set('n', '<leader>p', builtin.find_files, { desc = '[S]earch Ex[P]lorer' })
+      vim.keymap.set('n', '<leader>fg', builtin.git_files, { desc = '[F]ind [G]it Files' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       -- TODO: project wide search
@@ -435,7 +453,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      vim.keymap.set('n', '<leader>e', builtin.buffers, { desc = 'Find [E]xisting buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -535,6 +553,7 @@ require('lazy').setup({
   --     end
   --   end,
   -- },
+  --
 
   {
     -- Main LSP Configuration
@@ -599,6 +618,9 @@ require('lazy').setup({
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
           map('<leader>r', vim.lsp.buf.rename, '[R]e[n]ame')
+
+          -- Hover over keyword to display info
+          map('gh', vim.lsp.buf.hover, '[H]over Documentation')
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
@@ -752,6 +774,7 @@ require('lazy').setup({
         jsonls = {},
         sqlls = {},
         marksman = {},
+        eslint = {},
 
         lua_ls = {
           -- cmd = { ... },
@@ -787,6 +810,11 @@ require('lazy').setup({
       --  'stylua', -- Used to format Lua code
       -- })
       require('mason-tool-installer').setup { ensure_installed = { 'stylua' } }
+
+      -- Customize the hover window to have rounded borders
+      vim.lsp.handlers["textDocument/hover"] = {
+        border = "rounded",
+      }
 
       require('mason-lspconfig').setup {
         ensure_installed = vim.tbl_keys(servers), -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
@@ -970,13 +998,13 @@ require('lazy').setup({
             },
             glyphs = {
               git = {
-                unstaged  = "M",  -- Modified
-                staged    = "A",  -- Added
-                unmerged  = "U",  -- Unmerged
-                renamed   = "R",  -- Renamed
-                untracked = "?",  -- Untracked
-                deleted   = "D",  -- Deleted
-                ignored   = "I",  -- Ignored
+                unstaged  = "[M]",  -- Modified
+                staged    = "[A]",  -- Added
+                unmerged  = "[U]",  -- Unmerged
+                renamed   = "[R]",  -- Renamed
+                untracked = "[?]",  -- Untracked
+                deleted   = "[D]",  -- Deleted
+                ignored   = "[I]",  -- Ignored
               },
             },
           },
@@ -996,35 +1024,53 @@ require('lazy').setup({
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
-    config = function()
-      ---@diagnostic disable-next-line: missing-fields
-      require('tokyonight').setup {
-        transparent = true,
-        styles = {
-          comments = { italic = false, fg = '#c0caf5' }, -- Disable italics in comments
-          floats = 'transparent',
-          sidebars = 'transparent',
-        },
-      }
+    -- 'folke/tokyonight.nvim',
+    -- priority = 1000, -- Make sure to load this before all the other start plugins.
+    -- config = function()
+    --   ---@diagnostic disable-next-line: missing-fields
+    --   require('tokyonight').setup {
+    --     transparent = true,
+    --     styles = {
+    --       comments = { italic = false, fg = '#c0caf5' }, -- Disable italics in comments
+    --       floats = 'transparent',
+    --       sidebars = 'transparent',
+    --     },
+    --   }
 
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-storm'
+    --   vim.cmd.colorscheme 'tokyonight-storm'
+    --
+    --   -- Set BufferLine highlight after theme loads
+    --   vim.api.nvim_set_hl(0, 'BufferLineBufferSelected', {
+    --     bg = '#3b4261',
+    --     fg = '#c0caf5',
+    --     bold = true,
+    --   })
+    -- end,
+  },
 
-      -- Set BufferLine highlight after theme loads
-      vim.api.nvim_set_hl(0, 'BufferLineBufferSelected', {
-        bg = '#3b4261',
-        fg = '#c0caf5',
-        bold = true,
-      })
-    end,
+  {
+    "navarasu/onedark.nvim",
+    priority = 1000, -- make sure to load this before all the other start plugins
+    config = function()
+      require('onedark').setup {
+        style = 'darker',
+        transparent = true
+      }
+      -- Enable theme
+      require('onedark').load()
+
+      -- Enhance hover window readability
+      vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#1e1e2e", fg = "#cdd6f4" })
+      vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#1e1e2e", fg = "#89b4fa" })
+
+    end
   },
 
   -- Highlight todo, notes, etc in comments
-  { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
+  -- { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
   { -- Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
@@ -1035,14 +1081,14 @@ require('lazy').setup({
       --  - va)  - [V]isually select [A]round [)]paren
       --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
       --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup { n_lines = 500 }
+      -- require('mini.ai').setup { n_lines = 500 }
 
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
       --
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      -- require('mini.surround').setup()
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
@@ -1096,6 +1142,7 @@ require('lazy').setup({
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
+    dependencies = {"OXY2DEV/markview.nvim"},
     opts = {
       ensure_installed = {
         'javascript',
