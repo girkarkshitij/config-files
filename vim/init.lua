@@ -4,6 +4,7 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.g.python3_host_prog = 'C:\\Users\\DELL\\AppData\\Local\\Programs\\Python\\Python311\\python.exe'
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
@@ -32,7 +33,7 @@ vim.o.mouse = 'a'
 -- Don't show the mode, since it's already in the status line
 vim.o.showmode = false
 
-vim.o.foldmethod = 'expr'
+vim.o.foldmethod = 'indent'
 vim.o.foldexpr = 'nvim_treesitter#foldexpr()'
 vim.o.foldenable = true
 vim.o.foldlevel = 99
@@ -59,7 +60,7 @@ vim.o.smartcase = true
 vim.o.signcolumn = 'yes'
 
 -- Decrease update time
-vim.o.updatetime = 250
+vim.o.updatetime = 1000
 
 -- Decrease mapped sequence wait time
 vim.o.timeoutlen = 300
@@ -409,8 +410,10 @@ require('lazy').setup({
         -- pickers = {}
         defaults = {
           file_ignore_patterns = {
+            "package%-lock.json",
             "node_modules",
-            "%.git/",
+            "dist/",
+            "build/",
             "%.cache/",
             "%.o",
             "%.a",
@@ -761,7 +764,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -976,7 +979,7 @@ require('lazy').setup({
   {
     'nvim-tree/nvim-tree.lua',
     version = '*',
-    lazy = false,
+    -- lazy = false,
     dependencies = {
       'nvim-tree/nvim-web-devicons',
     },
@@ -1051,22 +1054,15 @@ require('lazy').setup({
     -- end,
   },
 
+  -- run :colorscheme $scheme_name to set colorscheme
+  -- Available scheme_name : nightfox, dayfox, dawnfox, duskfox, nordfox, terafox, carbofox
   {
-    "navarasu/onedark.nvim",
-    priority = 1000, -- make sure to load this before all the other start plugins
+    "EdenEast/nightfox.nvim",
+    lazy = false,  -- Load on startup
+    priority = 1000,  -- Load before other plugins
     config = function()
-      require('onedark').setup {
-        style = 'darker',
-        transparent = true
-      }
-      -- Enable theme
-      require('onedark').load()
-
-      -- Enhance hover window readability
-      vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#1e1e2e", fg = "#cdd6f4" })
-      vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#1e1e2e", fg = "#89b4fa" })
-
-    end
+      vim.cmd("colorscheme carbonfox")
+    end,
   },
 
   -- Highlight todo, notes, etc in comments
@@ -1160,6 +1156,8 @@ require('lazy').setup({
         'query',
         'vim',
         'vimdoc',
+        'json',
+        'jsonc'
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
@@ -1169,6 +1167,7 @@ require('lazy').setup({
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { 'ruby' },
+        disable = {"json","jsonc"},
       },
       indent = { enable = true, disable = { 'ruby' } },
     },
@@ -1204,6 +1203,52 @@ require('lazy').setup({
     event = 'InsertCharPre',
   },
 
+  {
+    'Vigemus/iron.nvim',
+    keys = {
+      { "<space>sc", mode = { "n", "v" }, desc = "Send code to REPL" },
+      { "<space>sf", desc = "Send file to REPL" },
+      { "<space>sl", desc = "Send line to REPL" },
+      { "<space>sm", desc = "Send marked section to REPL" },
+      { "<space>mc", desc = "Mark motion/visual selection" },
+      { "<space>md", desc = "Remove mark" },
+      { "<space>s<cr>", desc = "Send <CR> to REPL" },
+      { "<space>s<space>", desc = "Interrupt REPL" },
+      { "<space>sq", desc = "Exit REPL" },
+      { "<space>cl", desc = "Clear REPL" },
+    },
+    config = function()
+      local iron = require('iron.core')
+      local view = require('iron.view')
+
+      iron.setup {
+        config = {
+          scratch_repl = true,
+          repl_definition = {
+            python = {
+              command = { 'python' }
+            }
+          },
+          repl_open_cmd = view.split.vertical.botright(0.4),
+        },
+        keymaps = {
+          send_motion = "<space>sc",
+          visual_send = "<space>sc",
+          send_file = "<space>sf",
+          send_line = "<space>sl",
+          send_mark = "<space>sm",
+          mark_motion = "<space>mc",
+          mark_visual = "<space>mc",
+          remove_mark = "<space>md",
+          cr = "<space>s<cr>",
+          interrupt = "<space>s<space>",
+          exit = "<space>sq",
+          clear = "<space>cl",
+        }
+      }
+    end
+  },
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1218,7 +1263,7 @@ require('lazy').setup({
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
   -- require 'kickstart.plugins.neo-tree',
-  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
