@@ -1,0 +1,21 @@
+" === Tab Navigation (like <leader>l / <leader>h) ===
+map <space>l nextTab
+map <space>h previousTab
+map <space><space> visitPreviousTab
+map <space>0 firstTab
+map <space>$ lastTab
+map <space>p togglePinTab
+
+" === Tab Management ===
+map u restoreTab
+
+"=== scroll up and down
+map <c-u> scrollPageUp
+map <c-d> scrollPageDown
+
+" === Vomnibar (like quick open, files, search) ===
+map <space>t Vomnibar.activateTabSelection
+
+" === Browser Navigation (similar to <C-h>/<C-l>) ===
+map <c-h> goBack
+map <c-l> goForward
