@@ -101,7 +101,7 @@ vim.o.confirm = true
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Close current buffer
-vim.keymap.set('n', '<leader>q', '<cmd>bdelete<cr>', { desc = 'Close buffer' })
+vim.keymap.set('n', '<leader>q', '<cmd>bdelete<cr>', { desc = 'Close current buffer' })
 -- Save current file
 vim.keymap.set('n', '<leader>w', '<cmd>w<cr>', { desc = 'Save file' })
 -- Half-page down and center cursor
@@ -109,7 +109,7 @@ vim.keymap.set('n', '<C-d>', '<C-d>zz', { noremap = true, silent = true })
 -- Half-page up and center cursor
 vim.keymap.set('n', '<C-u>', '<C-u>zz', { noremap = true, silent = true })
 -- Close all buffers
-vim.keymap.set('n', '<leader>Q', ':bufdo bd<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>Q', ':bufdo bd<CR>', {  desc = 'Close all buffers', noremap = true, silent = true })
 
 -- Toggle betweem alternate files
 vim.keymap.set('n', '<leader><leader>', '<C-^>', { desc = 'Toggle to previous buffer' })
@@ -497,67 +497,6 @@ require('lazy').setup({
     },
   },
 
-  -- {
-  --   "SmiteshP/nvim-navic",
-  --   dependencies = {
-  --     "neovim/nvim-lspconfig"
-  --   },
-  --   config = function()
-  --     local navic = require("nvim-navic")
-
-  --     navic.setup {
-  --       highlight = true,
-  --       separator = " > ",
-  --       depth_limit = 5,
-  --       icons = {
-  --         File = " ",
-  --         Module = " ",
-  --         Namespace = " ",
-  --         Package = " ",
-  --         Class = " ",
-  --         Method = " ",
-  --         Property = " ",
-  --         Field = " ",
-  --         Constructor = " ",
-  --         Enum = " ",
-  --         Interface = " ",
-  --         Function = " ",
-  --         Variable = " ",
-  --         Constant = " ",
-  --         String = " ",
-  --         Number = " ",
-  --         Boolean = " ",
-  --         Array = " ",
-  --         Object = " ",
-  --         Key = " ",
-  --         Null = " ",
-  --         EnumMember = " ",
-  --         Struct = " ",
-  --         Event = " ",
-  --         Operator = " ",
-  --         TypeParameter = " "
-  --       }
-  --     }
-
-  --     -- Attach navic to LSP client
-  --     local lspconfig = require("lspconfig")
-  --     local on_attach = function(client, bufnr)
-  --       if client.server_capabilities.documentSymbolProvider then
-  --         navic.attach(client, bufnr)
-  --       end
-  --     end
-
-  --     -- Add your LSPs here to attach navic
-  --     local servers = { "tsserver", "html", "jsonls", "sqlls", "marksman", "lua_ls" }
-  --     for _, server in ipairs(servers) do
-  --       lspconfig[server].setup {
-  --         on_attach = on_attach,
-  --       }
-  --     end
-  --   end,
-  -- },
-  --
-
   {
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',
@@ -836,47 +775,6 @@ require('lazy').setup({
     end,
   },
 
-  -- { -- Autoformat
-  --   'stevearc/conform.nvim',
-  --   event = { 'BufWritePre' },
-  --   cmd = { 'ConformInfo' },
-  --   keys = {
-  --     {
-  --       '<leader>f',
-  --       function()
-  --         require('conform').format { async = true, lsp_format = 'fallback' }
-  --       end,
-  --       mode = '',
-  --       desc = '[F]ormat buffer',
-  --     },
-  --   },
-  --   opts = {
-  --     notify_on_error = false,
-  --     format_on_save = function(bufnr)
-  --       -- Disable "format_on_save lsp_fallback" for languages that don't
-  --       -- have a well standardized coding style. You can add additional
-  --       -- languages here or re-enable it for the disabled ones.
-  --       local disable_filetypes = { c = true, cpp = true }
-  --       if disable_filetypes[vim.bo[bufnr].filetype] then
-  --         return nil
-  --       else
-  --         return {
-  --           timeout_ms = 500,
-  --           lsp_format = 'fallback',
-  --         }
-  --       end
-  --     end,
-  --     formatters_by_ft = {
-  --       lua = { 'stylua' },
-  --       -- Conform can also run multiple formatters sequentially
-  --       -- python = { "isort", "black" },
-  --       --
-  --       -- You can use 'stop_after_first' to run the first available formatter from the list
-  --       -- javascript = { "prettierd", "prettier", stop_after_first = true },
-  --     },
-  --   },
-  -- },
-
   { -- Autocompletion
     'saghen/blink.cmp',
     event = 'VimEnter',
@@ -1022,38 +920,6 @@ require('lazy').setup({
     end,
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    -- 'folke/tokyonight.nvim',
-    -- priority = 1000, -- Make sure to load this before all the other start plugins.
-    -- config = function()
-    --   ---@diagnostic disable-next-line: missing-fields
-    --   require('tokyonight').setup {
-    --     transparent = true,
-    --     styles = {
-    --       comments = { italic = false, fg = '#c0caf5' }, -- Disable italics in comments
-    --       floats = 'transparent',
-    --       sidebars = 'transparent',
-    --     },
-    --   }
-
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-    --   vim.cmd.colorscheme 'tokyonight-storm'
-    --
-    --   -- Set BufferLine highlight after theme loads
-    --   vim.api.nvim_set_hl(0, 'BufferLineBufferSelected', {
-    --     bg = '#3b4261',
-    --     fg = '#c0caf5',
-    --     bold = true,
-    --   })
-    -- end,
-  },
-
   -- run :colorscheme $scheme_name to set colorscheme
   -- Available scheme_name : nightfox, dayfox, dawnfox, duskfox, nordfox, terafox, carbofox
   {
@@ -1061,6 +927,11 @@ require('lazy').setup({
     lazy = false,  -- Load on startup
     priority = 1000,  -- Load before other plugins
     config = function()
+      require("nightfox").setup({
+        options = {
+          transparent = true,
+        },
+      })
       vim.cmd("colorscheme carbonfox")
     end,
   },
@@ -1203,52 +1074,6 @@ require('lazy').setup({
     event = 'InsertCharPre',
   },
 
-  {
-    'Vigemus/iron.nvim',
-    keys = {
-      { "<space>sc", mode = { "n", "v" }, desc = "Send code to REPL" },
-      { "<space>sf", desc = "Send file to REPL" },
-      { "<space>sl", desc = "Send line to REPL" },
-      { "<space>sm", desc = "Send marked section to REPL" },
-      { "<space>mc", desc = "Mark motion/visual selection" },
-      { "<space>md", desc = "Remove mark" },
-      { "<space>s<cr>", desc = "Send <CR> to REPL" },
-      { "<space>s<space>", desc = "Interrupt REPL" },
-      { "<space>sq", desc = "Exit REPL" },
-      { "<space>cl", desc = "Clear REPL" },
-    },
-    config = function()
-      local iron = require('iron.core')
-      local view = require('iron.view')
-
-      iron.setup {
-        config = {
-          scratch_repl = true,
-          repl_definition = {
-            python = {
-              command = { 'python' }
-            }
-          },
-          repl_open_cmd = view.split.vertical.botright(0.4),
-        },
-        keymaps = {
-          send_motion = "<space>sc",
-          visual_send = "<space>sc",
-          send_file = "<space>sf",
-          send_line = "<space>sl",
-          send_mark = "<space>sm",
-          mark_motion = "<space>mc",
-          mark_visual = "<space>mc",
-          remove_mark = "<space>md",
-          cr = "<space>s<cr>",
-          interrupt = "<space>s<space>",
-          exit = "<space>sq",
-          clear = "<space>cl",
-        }
-      }
-    end
-  },
-
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1276,6 +1101,9 @@ require('lazy').setup({
   -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
   -- you can continue same window with `<space>sr` which resumes last telescope search
 }, {
+  rocks = {
+    enabled = false,
+  },
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
     -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
