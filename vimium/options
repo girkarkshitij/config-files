@@ -14,7 +14,7 @@ map <c-u> scrollPageUp
 map <c-d> scrollPageDown
 
 " === Vomnibar (like quick open, files, search) ===
-map <space>t Vomnibar.activateTabSelection
+map <space>e Vomnibar.activateTabSelection
 
 " === Browser Navigation (similar to <C-h>/<C-l>) ===
 map <c-h> goBack
